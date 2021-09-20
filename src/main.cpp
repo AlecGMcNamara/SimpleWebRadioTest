@@ -2,18 +2,23 @@
 #include "WiFi.h"
 #include "Audio.h"
 
-#include "SPIFFS.h"
+//#include "SPIFFS.h"
 
 #define I2S_DOUT     27
 #define I2S_BCLK     26
 #define I2S_LRC      25
+#define VOL_BUT      0
+#define VOL_MAX      12
+
 Audio audio;
 
 String ssid =    "SKYPEMHG";
 String password = "8NHetSWQAJ75";
-bool beat = false;
+uint8_t volume = 6;
+
 void setup() {
   Serial.begin(115200);
+  pinMode(VOL_BUT,PULLUP);
   WiFi.disconnect();
   WiFi.mode(WIFI_STA);
   Serial.println("Starting WiFi");
@@ -28,11 +33,9 @@ void setup() {
 //  }
   
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  audio.setVolume(5);
+  audio.setVolume(volume);
 
-  //audio.connecttoFS(SPIFFS,"/test.mp3" );
-  //audio.connecttoFS(SPIFFS,"/kick.wav" );
-  //audio.connecttoFS(SPIFFS,"/kick.wav" );
+//audio.connecttoFS(SPIFFS,"/test.mp3" );
 
 // Greatest hits radio Stafford and cheshire
 audio.connecttohost("www.radiofeeds.co.uk/bauerflash.pls?station=net2stoke.mp3.m3u");
@@ -40,7 +43,31 @@ audio.connecttohost("www.radiofeeds.co.uk/bauerflash.pls?station=net2stoke.mp3.m
 }
 void loop()
 {
+static bool LastStateVolButon = true;
+static bool VolumeUP = true;
+bool CurrentStateVolButton = digitalRead(VOL_BUT);
+ 
     audio.loop();
+
+    if(LastStateVolButon != CurrentStateVolButton && !CurrentStateVolButton){
+        if(VolumeUP){
+            volume +=3;
+            if(volume >= VOL_MAX){
+                VolumeUP=false;
+            } 
+        }
+        else{
+            volume -=3;
+            if(volume <= 0){
+                VolumeUP = true;
+            }
+        }
+        audio.setVolume(volume);
+        Serial.print("Volume ");
+        Serial.println(volume);
+    }
+
+    LastStateVolButon = CurrentStateVolButton;
 }
 // optional
 void audio_info(const char *info){
