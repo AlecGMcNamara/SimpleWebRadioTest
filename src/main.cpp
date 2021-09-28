@@ -3,29 +3,29 @@
 #include "Audio.h"
 #include <EEPROM.h>
 
-#define I2S_DOUT     27
-#define I2S_BCLK     26
-#define I2S_LRC      25
-#define VOL_BUT      0   // Boot button on board
-#define VOL_MAX      12
-#define VOL_MIN      0
+#define I2S_DOUT     27 //GPIO 27
+#define I2S_BCLK     26 //GPIO 26
+#define I2S_LRC      25 //GPIO 25
+#define VOL_BUT      0  //Boot button on dev board
+#define VOL_MAX      12 //Max is 21 but needs a good power supply
+#define VOL_MIN      0   
 #define VOL_STEP     2
 #define EEPROM_LENGTH           2
 #define EEPROM_CHECK_ADDRESS    0
-#define EEPROM_CHECK_NUMBER     69
-#define EEPROM_VOLUME_ADDRESS   1
+#define EEPROM_CHECK_NUMBER     69 //check valid volume saved
+#define EEPROM_VOLUME_ADDRESS   1 //saves last volume setting
 
 Audio audio;
 
 String ssid =    "SKYPEMHG";
 String password = "8NHetSWQAJ75";
-uint8_t volume = 6;
+uint8_t volume = 6;         // default volume
 
 void setVolume(){
 static bool LastStateVolButon = true;
 static bool VolumeUP = true;
 bool CurrentStateVolButton = digitalRead(VOL_BUT);
- 
+    //Boot button pressed
     if(LastStateVolButon != CurrentStateVolButton && !CurrentStateVolButton){
         if(VolumeUP){
             volume +=VOL_STEP;
@@ -41,12 +41,11 @@ bool CurrentStateVolButton = digitalRead(VOL_BUT);
                 VolumeUP = true;
             }
         }
-        audio.setVolume(volume);
+        audio.setVolume(volume); //set volume on max98357A
         EEPROM.write(EEPROM_CHECK_ADDRESS,EEPROM_CHECK_NUMBER);
         EEPROM.write(EEPROM_VOLUME_ADDRESS,volume);
-        EEPROM.commit();
+        EEPROM.commit(); // save volume in EPPROM
     }
-
     LastStateVolButon = CurrentStateVolButton;
 }
 
@@ -60,7 +59,7 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED)
   delay(1500);
   Serial.println("WiFi Connected!");
-  
+  //read volume from EEPROM
   EEPROM.begin(EEPROM_LENGTH);
   if(EEPROM.read(EEPROM_CHECK_ADDRESS) == EEPROM_CHECK_NUMBER){ 
       volume = EEPROM.read(EEPROM_VOLUME_ADDRESS); 
@@ -70,7 +69,7 @@ void setup() {
   audio.setVolume(volume);
 
 // Greatest hits radio Stafford and cheshire
-audio.connecttohost("www.radiofeeds.co.uk/bauerflash.pls?station=net2stoke.mp3.m3u");
+  audio.connecttohost("www.radiofeeds.co.uk/bauerflash.pls?station=net2stoke.mp3.m3u");
 }
 
 void loop()
@@ -79,7 +78,7 @@ void loop()
     setVolume();
 }
 
-// optional
+// optional, displays stream information 
 void audio_info(const char *info){
     Serial.print("info        "); Serial.println(info);
 }
