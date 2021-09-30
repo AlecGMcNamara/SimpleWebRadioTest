@@ -5,4 +5,4 @@ Please see schematic for the wiring. The two resistors configure the MAX98357A b
 
 Use the onboard BOOT button to set the volume.
 
-Power though USB connector on development board. 
+Power though USB connector on development board, or 5V and GND directly on Development board.
